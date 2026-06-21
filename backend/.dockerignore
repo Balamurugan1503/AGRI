@@ -1,0 +1,23 @@
+# Ignore virtual environment
+venv/
+.venv/
+env/
+
+# Ignore Python bytecode and cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ignore local config files and service accounts
+firebase-service-account.json
+.env
+.env.local
+
+# Ignore data and uploads
+temp_uploads/
+*.csv
+catboost_info/
