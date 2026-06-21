@@ -1,6 +1,6 @@
 # 🌾 AgriForecast - AI Powered Smart Agriculture Platform
 
-FRONTEND:https://agri-git-main-balamurugan-gs-projects.vercel.app/
+FRONTEND:https://agri-m0lqeegc8-balamurugan-gs-projects.vercel.app
 
 
 BACKEND:https://agri-qdqi.onrender.com
