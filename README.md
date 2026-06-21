@@ -1,6 +1,9 @@
-# 🌾 AGRI - AI Powered Smart Agriculture Platform
+# 🌾 AgriForecast - AI Powered Smart Agriculture Platform
 
-AGRI is a modern AI-powered agriculture platform designed to empower farmers with intelligent crop management and data-driven decision making. The platform combines Machine Learning, weather and soil analytics, farm management, and community collaboration to improve agricultural productivity and sustainability.
+FRONTEND:https://agri-git-main-balamurugan-gs-projects.vercel.app/
+BACKEND:https://agri-qdqi.onrender.com
+
+AgriForecast is a modern AI-powered agriculture platform designed to empower farmers with intelligent crop management and data-driven decision making. The platform combines Machine Learning, weather and soil analytics, farm management, and community collaboration to improve agricultural productivity and sustainability.
 
 ---
 
