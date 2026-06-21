@@ -35,7 +35,6 @@ app = FastAPI(title="Crop Yield Prediction API", version="1.0.0")
 logger = logging.getLogger("uvicorn.error")
  
 # CORS middleware
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Crop Yield Prediction API",
@@ -44,16 +43,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://agri-m0lqeegc8-balamurugan-gs-projects.vercel.app",
-        "https://agri-flame.vercel.app",
-        "http://localhost:3000",
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
- 
 # Initialize Firebase Admin and Firestore client safely
 db = None
 try:
