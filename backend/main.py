@@ -59,13 +59,24 @@ try:
             cred = credentials.Certificate(service_account_info)
             print("✅ Firebase using credentials from environment variable")
         else:
-            cred = credentials.Certificate("firebase-service-account.json")
-            print("✅ Firebase using credentials from local service-account JSON file")
+            # Check current working directory, then backend directory
+            local_path = "firebase-service-account.json"
+            backend_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "firebase-service-account.json")
+            if os.path.exists(local_path):
+                cred = credentials.Certificate(local_path)
+                print(f"✅ Firebase using credentials from local service-account JSON file: {local_path}")
+            elif os.path.exists(backend_path):
+                cred = credentials.Certificate(backend_path)
+                print(f"✅ Firebase using credentials from local service-account JSON file: {backend_path}")
+            else:
+                cred = None
+                print("⚠ No firebase-service-account.json file or FIREBASE_SERVICE_ACCOUNT_JSON env var found")
 
-        firebase_admin.initialize_app(cred, {
-            'storageBucket': bucket_url
-        })
-        print(f"✅ Firebase initialized successfully with Storage Bucket: {bucket_url}")
+        if cred:
+            firebase_admin.initialize_app(cred, {
+                'storageBucket': bucket_url
+            })
+            print(f"✅ Firebase initialized successfully with Storage Bucket: {bucket_url}")
     
     if firebase_admin._apps:
         db = firestore.client()
@@ -83,8 +94,7 @@ def verify_db():
         )
  
 # Instantiate fertilizer model predictor globally
-# (This initialization is not modified)
-fertilizer_predictor = FertilizerModelPredictor(model_path="ml_models")
+fertilizer_predictor = FertilizerModelPredictor()
 fertilizer_load_success = fertilizer_predictor.load_model()
  
 @app.exception_handler(RequestValidationError)
@@ -94,7 +104,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
  
 @app.on_event("startup")
 async def startup_event():
-    has_local_json = os.path.isfile("firebase-service-account.json")
+    local_path = "firebase-service-account.json"
+    backend_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "firebase-service-account.json")
+    has_local_json = os.path.isfile(local_path) or os.path.isfile(backend_path)
     has_env_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON") is not None
     if not (has_local_json or has_env_json):
         print("❌ Firebase credentials NOT found (local file and FIREBASE_SERVICE_ACCOUNT_JSON env variable are both missing)!")
@@ -145,6 +157,16 @@ class UserProfile(BaseModel):
     email: str
     phone: Optional[str] = None
     role: Optional[str] = "farmer"
+
+class FertilizerRequest(BaseModel):
+    temperature: Optional[float] = None
+    humidity: Optional[float] = None
+    moisture: Optional[float] = None
+    soil_type: Optional[str] = None
+    crop_type: Optional[str] = None
+    nitrogen: Optional[float] = None
+    phosphorous: Optional[float] = None
+    potassium: Optional[float] = None
 
 class CommunityPostCreate(BaseModel):
     title: str
@@ -245,12 +267,14 @@ async def test_firestore():
         }
 
 @app.get("/api/crops")
+@app.get("/crops")
 async def get_available_crops():
     if not predictor.is_loaded:
         raise HTTPException(status_code=503, detail="ML model not available")
     return {"crops": predictor.get_available_crops()}
 
 @app.post("/api/predict")
+@app.post("/predict")
 async def predict_yield(request: PredictionRequest, user=Depends(get_current_user)):
     verify_db()
     if not predictor.is_loaded:
@@ -327,7 +351,26 @@ async def predict_yield(request: PredictionRequest, user=Depends(get_current_use
             })
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
+@app.post("/api/fertilizer")
+@app.post("/fertilizer")
+async def recommend_fertilizer(request: FertilizerRequest, user=Depends(get_current_user)):
+    if not fertilizer_load_success:
+        raise HTTPException(status_code=503, detail="Fertilizer model not available")
+    try:
+        inputs = {
+            "temperature": request.temperature, "humidity": request.humidity,
+            "moisture": request.moisture, "soil_type": request.soil_type,
+            "crop_type": request.crop_type, "nitrogen": request.nitrogen,
+            "phosphorous": request.phosphorous, "potassium": request.potassium,
+        }
+        result = fertilizer_predictor.predict(**inputs)
+        return result
+    except Exception as e:
+        logger.error(f"Fertilizer prediction failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Fertilizer prediction failed: {str(e)}")
+
 @app.post("/api/add-farm")
+@app.post("/add-farm")
 async def add_farm(farm: FarmData, user=Depends(get_current_user)):
     verify_db()
     try:
@@ -344,6 +387,7 @@ async def add_farm(farm: FarmData, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"Failed to add farm: {str(e)}")
 
 @app.get("/api/get-farms")
+@app.get("/get-farms")
 async def get_farms(user=Depends(get_current_user)):
     verify_db()
     try:
@@ -357,6 +401,7 @@ async def get_farms(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"Failed to get farms: {str(e)}")
 
 @app.get("/api/get-predictions")
+@app.get("/get-predictions")
 async def get_predictions(user=Depends(get_current_user)):
     verify_db()
     try:
@@ -368,6 +413,7 @@ async def get_predictions(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"Failed to get predictions: {str(e)}")
 
 @app.post("/api/update-profile")
+@app.post("/update-profile")
 async def update_profile(profile: UserProfile, user=Depends(get_current_user)):
     verify_db()
     try:
@@ -382,6 +428,7 @@ async def update_profile(profile: UserProfile, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"Failed to update profile: {str(e)}")
 
 @app.post("/api/extract-text-from-document")
+@app.post("/extract-text-from-document")
 async def extract_text_from_document(file: UploadFile = File(...)):
     temp_dir = "temp_uploads"
     os.makedirs(temp_dir, exist_ok=True)
@@ -425,6 +472,7 @@ async def extract_text_from_document(file: UploadFile = File(...)):
 # --- COMMUNITY ENDPOINTS ---
 
 @app.post("/api/community/posts", status_code=201)
+@app.post("/community/posts", status_code=201)
 async def create_community_post(
     user=Depends(get_current_user),
     title: str = Form(...),
@@ -500,6 +548,7 @@ async def create_community_post(
         raise HTTPException(status_code=500, detail=f"Failed to create post.")
 
 @app.get("/api/community/posts")
+@app.get("/community/posts")
 async def get_all_community_posts():
     verify_db()
     try:
@@ -511,6 +560,7 @@ async def get_all_community_posts():
         raise HTTPException(status_code=500, detail="Failed to retrieve posts.")
 
 @app.get("/api/community/posts/{post_id}")
+@app.get("/community/posts/{post_id}")
 async def get_post_and_comments(post_id: str):
     verify_db()
     try:
@@ -527,6 +577,7 @@ async def get_post_and_comments(post_id: str):
         raise HTTPException(status_code=500, detail="Could not retrieve post details.")
 
 @app.post("/api/community/posts/{post_id}/comments", status_code=201)
+@app.post("/community/posts/{post_id}/comments", status_code=201)
 async def add_comment_to_post(post_id: str, comment_data: CommentCreate, user=Depends(get_current_user)):
     verify_db()
     try:
@@ -565,6 +616,7 @@ async def add_comment_to_post(post_id: str, comment_data: CommentCreate, user=De
         raise HTTPException(status_code=500, detail="Failed to add comment.")
 
 @app.post("/api/community/posts/{post_id}/like")
+@app.post("/community/posts/{post_id}/like")
 async def toggle_like_post(post_id: str, user=Depends(get_current_user)):
     verify_db()
     try:

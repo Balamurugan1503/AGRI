@@ -1,7 +1,10 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
+
+# env files
+.env
+.env.local
+.env.*
 
 # next.js
 /.next/
@@ -16,9 +19,6 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
-.env*
-
 # vercel
 .vercel
 
@@ -26,9 +26,16 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Python
 venv/
+.venv/
 backend/venv/
 backend/firebase-service-account.json
 backend/firebase-service-account.json
 **/firebase-service-account.json
 .env
+__pycache__/
+**/__pycache__/
+*.pyc
+catboost_info/
+**/catboost_info/

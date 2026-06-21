@@ -6,20 +6,30 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const lat = searchParams.get("lat");
   const lon = searchParams.get("lon");
-  const source = searchParams.get("source"); // To select which API to call
-  const prop = searchParams.get("prop"); // The property to fetch
+  const source = searchParams.get("source") || "isric";
+  const prop = searchParams.get("prop");
 
-  if (!lat || !lon || !source || !prop) {
+  if (!lat || !lon) {
     return NextResponse.json(
-      { error: "lat, lon, source, and prop are required" },
+      { error: "lat and lon are required" },
       { status: 400 }
     );
   }
 
   let apiUrl;
   if (source === 'isric') {
-    apiUrl = `https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lon}&lat=${lat}&property=${prop}&depth=0-5cm&value=mean`;
+    if (prop) {
+      apiUrl = `https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lon}&lat=${lat}&property=${prop}&depth=0-5cm&value=mean`;
+    } else {
+      apiUrl = `https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lon}&lat=${lat}&property=phh2o&property=nitrogen&property=clay&property=sand&property=silt&property=soc&depth=0-5cm&value=mean`;
+    }
   } else if (source === 'olm') {
+    if (!prop) {
+      return NextResponse.json(
+        { error: "prop is required for openlandmap source" },
+        { status: 400 }
+      );
+    }
     apiUrl = `https://api.openlandmap.org/query/point?lon=${lon}&lat=${lat}&coll=${prop}`;
   } else {
     return NextResponse.json({ error: "Invalid source" }, { status: 400 });

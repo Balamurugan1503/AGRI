@@ -3,7 +3,9 @@ import pandas as pd
 import os
 
 class FertilizerModelPredictor:
-    def __init__(self, model_path: str = "ml_models"):
+    def __init__(self, model_path: str = None):
+        if model_path is None:
+            model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ml_models")
         self.model_path = model_path
         self.model = None
         self.model_columns = None
