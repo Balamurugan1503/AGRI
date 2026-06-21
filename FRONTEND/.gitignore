@@ -39,3 +39,7 @@ __pycache__/
 *.pyc
 catboost_info/
 **/catboost_info/
+.env
+.env.*
+backend/.env
+backend/.env.*

@@ -35,12 +35,20 @@ app = FastAPI(title="Crop Yield Prediction API", version="1.0.0")
 logger = logging.getLogger("uvicorn.error")
  
 # CORS middleware
-cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:3000")
-cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(
+    title="Crop Yield Prediction API",
+    version="1.0.0"
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origins=[
+        "https://agri-m0lqeegc8-balamurugan-gs-projects.vercel.app",
+        "https://agri-flame.vercel.app",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

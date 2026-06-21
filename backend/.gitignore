@@ -1,0 +1,44 @@
+# Python virtual environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment files
+.env
+.env.*
+firebase-service-account.json
+**/firebase-service-account.json
+
+.env
+.env.*
+backend/.env
+backend/.env.* 
+
+.env
+.env.*
+# Firebase service account
+firebase-service-account.json
+**/firebase-service-account.json
+
+# CatBoost training logs
+catboost_info/
+**/catboost_info/
+
+# Temporary uploads
+temp_uploads/
+
+# VS Code
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
